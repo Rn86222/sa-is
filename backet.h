@@ -8,7 +8,7 @@ typedef struct data {
   int first;
   int last;
   int idx;
-  int isLMS;
+  char isLMS;
 } Data;
 
 typedef struct backet {
@@ -21,7 +21,7 @@ typedef struct backet {
 
 typedef struct backettable {
   Backet* backets;
-  int *backet_exists;
+  char *backet_exists;
   int backet_num;
   int* string;
 } BacketTable;

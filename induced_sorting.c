@@ -215,7 +215,7 @@ void sais(const char str[]) {
 
   construct_suffix_array(&bt_suffix_array, int_str, len, 1, counts);
 
-  // BacketTable_print_as_suffix_array(&bt_suffix_array);
+  BacketTable_print_as_suffix_array(&bt_suffix_array);
 
   free(int_str);
   BacketTable_destroy(&bt_suffix_array);

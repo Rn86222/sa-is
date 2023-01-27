@@ -41,7 +41,7 @@ void Backet_b_insert(Backet* p_self, const int index, const int isLMS, const int
 void BacketTable_init(BacketTable* p_self, const int size, const int backet_num, int* data) {
   p_self->string = data;
   p_self->backets = (Backet*)malloc(backet_num * sizeof(Backet));
-  p_self->backet_exists = (int*)malloc(backet_num * sizeof(int));
+  p_self->backet_exists = (char*)malloc(backet_num * sizeof(char));
   p_self->backet_num = backet_num;
   for (int i = 0; i < backet_num; i++) {
     Backet_init(&(p_self->backets[i]), i, size, data);
@@ -52,7 +52,7 @@ void BacketTable_init(BacketTable* p_self, const int size, const int backet_num,
 void BacketTable_init_with_counts(BacketTable* p_self, const int* counts, const int backet_num, int* data) {
   p_self->string = data;
   p_self->backets = (Backet*)malloc(backet_num * sizeof(Backet));
-  p_self->backet_exists = (int*)malloc(backet_num * sizeof(int));
+  p_self->backet_exists = (char*)malloc(backet_num * sizeof(char));
   p_self->backet_num = backet_num;
   for (int i = 0; i < backet_num; i++) {
     Backet_init(&(p_self->backets[i]), i, counts[i], data);
