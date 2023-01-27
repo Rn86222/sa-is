@@ -4,6 +4,8 @@
 #include <time.h>
 #include "backet.h"
 
+#define MAX_LEN 300000000 // 文字列の最大長
+
 const char S = 0;
 const char L = 1;
 
@@ -21,7 +23,6 @@ void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
       for (int j = 0; j < p_backet->f_idx; j++) {
         int suffix_idx = p_backet->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == L)
-          // BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first);
           BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
       for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
@@ -76,8 +77,6 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
 
   // tableの作成
   for (int i = 0; i < len; i++) {
-    // table[len - i - 1].data = str;
-    // table[len - i - 1].first = len - i - 1;
     if (i > 0) {
       if (str[len - i - 1] < str[len - i]) {
         table[len - i - 1].type = S;
@@ -115,10 +114,6 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   */
 
   // (1) LMSを先頭の1文字についてバケットソート
-  // for (int i = 0; i < len; i++) {
-  //   if (table[i].isLMS)
-  //     BacketTable_b_insert(&bt_LMS_substring, i, table[i].isLMS, table[i].first);
-  // }
   for (int i = 0; i < LMS_num; i++) {
     BacketTable_b_insert(&bt_LMS_substring, LMS_ids[i], 1, LMS_ids[i]);
   }
@@ -172,11 +167,9 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
     if (bt_LMS_sort.backet_exists[i]) {
       Backet* p_backet = &(bt_LMS_sort.backets[i]);
       for (int j = 0; j < p_backet->f_idx; j++) {
-        // sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
         sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
       }
       for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
-        // sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
         sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
       }
     }
@@ -194,21 +187,12 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   free(sorted_substr_ids);
   free(LMS_ids);
   free(table);
+
   BacketTable_destroy(&bt_LMS_substring);
-  // for (int i = 0; i < bt_LMS_substring.backet_num; i++) {
-  //   if (bt_LMS_substring.backet_exists[i]) {
-  //     Backet_destroy(bt_LMS_substring.backets[i]);
-  //   }
-  // }
   BacketTable_destroy(&bt_LMS_sort);
-  // for (int i = 0; i < bt_LMS_sort.backet_num; i++) {
-  //   if (bt_LMS_sort.backet_exists[i]) {
-  //     Backet_destroy(bt_LMS_sort.backets[i]);
-  //   }
-  // }
 }
 
-void sais(const char str[]) {
+void sais(const char str[], const char display) {
   int len = strlen(str) + 1; // 末尾の'\0'を考慮して1足しておく;
   int counts[128]; // 各文字の出現回数を数える(各バケットのサイズを決めるのに使う)
   for (int i = 0; i < 128; i++) {
@@ -228,7 +212,8 @@ void sais(const char str[]) {
 
   construct_suffix_array(&bt_suffix_array, int_str, len, 1, counts);
 
-  // BacketTable_print_as_suffix_array(&bt_suffix_array, len - 1);
+  if (display == '1')
+    BacketTable_print_as_suffix_array(&bt_suffix_array, len - 1);
 
   free(int_str);
   BacketTable_destroy(&bt_suffix_array);
@@ -236,23 +221,26 @@ void sais(const char str[]) {
 }
 
 
-int main() {
-  int max_len = 300000000;
+int main(int argc, const char *argv[]) {
+
+  if (argc <= 1)
+    return 0;
+
   char* str;
   clock_t start_t, end_t;
 
-  str = (char*)malloc(max_len * sizeof(char));
+  str = (char*)malloc(MAX_LEN * sizeof(char));
   scanf("%[\x01-\x7f]", str);
-  // printf("%s\n", str);
-  
+
   start_t = clock();
-  sais(str);
+
+  sais(str, argv[1][0]);
+
   end_t = clock();
 
   printf("time (sec): %f\n", (double)(end_t - start_t) / CLOCKS_PER_SEC);
  
   free(str);
-  // sais("mmiissiissiippiifcgvhbjnkyftrfxdgvbhjnkjhujgytfdxkjhghffdghjkhgfdfghjkhgfdswedrftgyhjnmbhgvfcdxsedrftgyhujkmnbvcxsdfcgvbh");
-  
+
   return 0;
 }
