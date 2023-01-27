@@ -193,6 +193,7 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
 }
 
 void sais(const char str[], const char display) {
+  
   int len = strlen(str) + 1; // 末尾の'\0'を考慮して1足しておく;
   int counts[128]; // 各文字の出現回数を数える(各バケットのサイズを決めるのに使う)
   for (int i = 0; i < 128; i++) {
@@ -226,9 +227,9 @@ int main(int argc, const char *argv[]) {
   if (argc <= 1)
     return 0;
 
-  char* str;
   clock_t start_t, end_t;
 
+  char* str;
   str = (char*)malloc(MAX_LEN * sizeof(char));
   scanf("%[\x01-\x7f]", str);
 
