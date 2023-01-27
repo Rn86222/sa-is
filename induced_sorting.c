@@ -8,9 +8,7 @@ const char S = 0;
 const char L = 1;
 
 typedef struct suffixinfo {
-  int* data;
-  int first;
-  int last;
+  // int first;
   char type;
   char isLMS;
 } SuffixInfo;
@@ -23,12 +21,13 @@ void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
       for (int j = 0; j < p_backet->f_idx; j++) {
         int suffix_idx = p_backet->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == L)
-          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first, table[suffix_idx - 1].last);
+          // BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first);
+          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
       for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
         int suffix_idx = p_backet->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == L)
-          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first, table[suffix_idx - 1].last);
+          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
     }
   }
@@ -36,7 +35,7 @@ void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
   // S-type(LMS)を削除（実際にはb_idxをsize - 1とすればよい）
   // ただし最後のLMSは削除してはいけない
   for (int i = 0; i < p_bt->backet_num; i++) {
-    if (p_bt->backet_exists[i] && p_bt->backets[i].data[p_bt->backets[i].size - 1].first != p_bt->backets[i].data[p_bt->backets[i].size - 1].last) { // 長さが1でない
+    if (p_bt->backet_exists[i] && p_bt->backets[i].data->first != len - 1) { // 長さが1でない
       p_bt->backets[i].b_idx = p_bt->backets[i].size - 1;
       if (p_bt->backets[i].f_idx == 0)
         p_bt->backet_exists[i] = 0;
@@ -50,12 +49,12 @@ void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
       for (int j = p_backet->size - 1; j > p_backet->b_idx; j--) {
         int suffix_idx = p_backet->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == S)
-          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first, table[suffix_idx - 1].last);
+          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
       for (int j = p_backet->f_idx - 1; j >= 0; j--) {
         int suffix_idx = p_backet->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == S)
-          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, table[suffix_idx - 1].first, table[suffix_idx - 1].last);
+          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
     }
   }
@@ -63,7 +62,7 @@ void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
 
 void construct_suffix_array(BacketTable* bt, int* str, const int len, const int origin, int* counts) {
   if (len <= 1) {
-    BacketTable_f_insert(bt, 0, 0, 0, len - 1);
+    BacketTable_f_insert(bt, 0, 0, 0);
     return;
   }
 
@@ -77,9 +76,8 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
 
   // tableの作成
   for (int i = 0; i < len; i++) {
-    table[len - i - 1].data = str;
-    table[len - i - 1].first = len - i - 1;
-    table[len - i - 1].last = len - 1;
+    // table[len - i - 1].data = str;
+    // table[len - i - 1].first = len - i - 1;
     if (i > 0) {
       if (str[len - i - 1] < str[len - i]) {
         table[len - i - 1].type = S;
@@ -117,9 +115,12 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   */
 
   // (1) LMSを先頭の1文字についてバケットソート
-  for (int i = 0; i < len; i++) {
-    if (table[i].isLMS)
-      BacketTable_b_insert(&bt_LMS_substring, i, table[i].isLMS, table[i].first, table[i].last);
+  // for (int i = 0; i < len; i++) {
+  //   if (table[i].isLMS)
+  //     BacketTable_b_insert(&bt_LMS_substring, i, table[i].isLMS, table[i].first);
+  // }
+  for (int i = 0; i < LMS_num; i++) {
+    BacketTable_b_insert(&bt_LMS_substring, LMS_ids[i], 1, LMS_ids[i]);
   }
 
   // (2) induced_sort()実行
@@ -171,17 +172,19 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
     if (bt_LMS_sort.backet_exists[i]) {
       Backet* p_backet = &(bt_LMS_sort.backets[i]);
       for (int j = 0; j < p_backet->f_idx; j++) {
-        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
+        // sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
+        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
       }
       for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
-        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
+        // sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[p_backet->data[j].string[p_backet->data[j].first]];
+        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
       }
     }
   }
 
   // 取り出した順とは逆に各バケットの下から入れる
   for (int i = LMS_num - 1; i >= 0; i--)
-    BacketTable_b_insert(bt, sorted_LMS_ids[i], 1, table[sorted_LMS_ids[i]].first, table[sorted_LMS_ids[i]].last);
+    BacketTable_b_insert(bt, sorted_LMS_ids[i], 1, sorted_LMS_ids[i]);
 
   // (7) induced_sort()を実行
   induced_sort(bt, table, len);
@@ -192,7 +195,17 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   free(LMS_ids);
   free(table);
   BacketTable_destroy(&bt_LMS_substring);
+  // for (int i = 0; i < bt_LMS_substring.backet_num; i++) {
+  //   if (bt_LMS_substring.backet_exists[i]) {
+  //     Backet_destroy(bt_LMS_substring.backets[i]);
+  //   }
+  // }
   BacketTable_destroy(&bt_LMS_sort);
+  // for (int i = 0; i < bt_LMS_sort.backet_num; i++) {
+  //   if (bt_LMS_sort.backet_exists[i]) {
+  //     Backet_destroy(bt_LMS_sort.backets[i]);
+  //   }
+  // }
 }
 
 void sais(const char str[]) {
@@ -215,7 +228,7 @@ void sais(const char str[]) {
 
   construct_suffix_array(&bt_suffix_array, int_str, len, 1, counts);
 
-  BacketTable_print_as_suffix_array(&bt_suffix_array);
+  // BacketTable_print_as_suffix_array(&bt_suffix_array, len - 1);
 
   free(int_str);
   BacketTable_destroy(&bt_suffix_array);
