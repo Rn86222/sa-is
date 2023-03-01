@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "backet.h"
+#include "bucket.h"
 
 #define MAX_LEN 300000000 // 文字列の最大長
 
@@ -15,55 +15,55 @@ typedef struct suffixinfo {
   char isLMS;
 } SuffixInfo;
 
-void induced_sort(BacketTable* p_bt, const SuffixInfo* table, const int len) {
+void induced_sort(BucketTable* p_bt, const SuffixInfo* table, const int len) {
   // L-typeの位置を決定
-  for (int i = 0; i < p_bt->backet_num; i++) {
-    if (p_bt->backet_exists[i]) {
-      Backet* p_backet = &(p_bt->backets[i]);
-      for (int j = 0; j < p_backet->f_idx; j++) {
-        int suffix_idx = p_backet->data[j].idx;
+  for (int i = 0; i < p_bt->bucket_num; i++) {
+    if (p_bt->bucket_exists[i]) {
+      Bucket* p_bucket = &(p_bt->buckets[i]);
+      for (int j = 0; j < p_bucket->f_idx; j++) {
+        int suffix_idx = p_bucket->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == L)
-          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
+          BucketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
-      for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
-        int suffix_idx = p_backet->data[j].idx;
+      for (int j = p_bucket->b_idx + 1; j < p_bucket->size; j++) {
+        int suffix_idx = p_bucket->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == L)
-          BacketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
+          BucketTable_f_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
     }
   }
 
   // S-type(LMS)を削除（実際にはb_idxをsize - 1とすればよい）
   // ただし最後のLMSは削除してはいけない
-  for (int i = 0; i < p_bt->backet_num; i++) {
-    if (p_bt->backet_exists[i] && p_bt->backets[i].data->first != len - 1) { // 長さが1でない
-      p_bt->backets[i].b_idx = p_bt->backets[i].size - 1;
-      if (p_bt->backets[i].f_idx == 0)
-        p_bt->backet_exists[i] = 0;
+  for (int i = 0; i < p_bt->bucket_num; i++) {
+    if (p_bt->bucket_exists[i] && p_bt->buckets[i].data->first != len - 1) { // 長さが1でない
+      p_bt->buckets[i].b_idx = p_bt->buckets[i].size - 1;
+      if (p_bt->buckets[i].f_idx == 0)
+        p_bt->bucket_exists[i] = 0;
     }
 
   }
   // S-typeの位置を決定
-  for (int i = p_bt->backet_num - 1; i >= 0; i--) {
-    if (p_bt->backet_exists[i]) {
-      Backet* p_backet = &(p_bt->backets[i]);
-      for (int j = p_backet->size - 1; j > p_backet->b_idx; j--) {
-        int suffix_idx = p_backet->data[j].idx;
+  for (int i = p_bt->bucket_num - 1; i >= 0; i--) {
+    if (p_bt->bucket_exists[i]) {
+      Bucket* p_bucket = &(p_bt->buckets[i]);
+      for (int j = p_bucket->size - 1; j > p_bucket->b_idx; j--) {
+        int suffix_idx = p_bucket->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == S)
-          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
+          BucketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
-      for (int j = p_backet->f_idx - 1; j >= 0; j--) {
-        int suffix_idx = p_backet->data[j].idx;
+      for (int j = p_bucket->f_idx - 1; j >= 0; j--) {
+        int suffix_idx = p_bucket->data[j].idx;
         if (suffix_idx > 0 && table[suffix_idx - 1].type == S)
-          BacketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
+          BucketTable_b_insert(p_bt, suffix_idx - 1, table[suffix_idx - 1].isLMS, suffix_idx - 1);
       }
     }
   }
 }
 
-void construct_suffix_array(BacketTable* bt, int* str, const int len, const int origin, int* counts) {
+void construct_suffix_array(BucketTable* bt, int* str, const int len, const int origin, int* counts) {
   if (len <= 1) {
-    BacketTable_f_insert(bt, 0, 0, 0);
+    BucketTable_f_insert(bt, 0, 0, 0);
     return;
   }
 
@@ -95,11 +95,11 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
     }
   }
 
-  BacketTable bt_LMS_substring; // LMS-substringの番号づけ用のBacket Table
+  BucketTable bt_LMS_substring; // LMS-substringの番号づけ用のBucket Table
   if (origin) {
-    BacketTable_init_with_counts(&bt_LMS_substring, counts, 128, str);
+    BucketTable_init_with_counts(&bt_LMS_substring, counts, 128, str);
   } else {
-    BacketTable_init(&bt_LMS_substring, 1, len, str);
+    BucketTable_init(&bt_LMS_substring, 1, len, str);
   }
 
   /*
@@ -115,7 +115,7 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
 
   // (1) LMSを先頭の1文字についてバケットソート
   for (int i = 0; i < LMS_num; i++) {
-    BacketTable_b_insert(&bt_LMS_substring, LMS_ids[i], 1, LMS_ids[i]);
+    BucketTable_b_insert(&bt_LMS_substring, LMS_ids[i], 1, LMS_ids[i]);
   }
 
   // (2) induced_sort()実行
@@ -128,13 +128,13 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   LMS_idx_to_substr_idx = (int*)malloc(len * sizeof(int));
   
   int cnt = 0;
-  for (int i = 0; i < bt_LMS_substring.backet_num; i++) {
-    Backet* p_backet = &(bt_LMS_substring.backets[i]);
-    if (bt_LMS_substring.backet_exists[i]) {
-      for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
-        if (p_backet->data[j].isLMS) {
-          substr_idx_to_LMS_idx[cnt] = p_backet->data[j].idx;
-          LMS_idx_to_substr_idx[p_backet->data[j].idx] = cnt++;
+  for (int i = 0; i < bt_LMS_substring.bucket_num; i++) {
+    Bucket* p_bucket = &(bt_LMS_substring.buckets[i]);
+    if (bt_LMS_substring.bucket_exists[i]) {
+      for (int j = p_bucket->b_idx + 1; j < p_bucket->size; j++) {
+        if (p_bucket->data[j].isLMS) {
+          substr_idx_to_LMS_idx[cnt] = p_bucket->data[j].idx;
+          LMS_idx_to_substr_idx[p_bucket->data[j].idx] = cnt++;
         }
       }
     }
@@ -151,8 +151,8 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   free(LMS_idx_to_substr_idx);
 
   // (5) この文字列に対しconstruct_suffix_array()を再帰呼び出し
-  BacketTable bt_LMS_sort; // LMS-substringのsuffix array用のBacket Table
-  BacketTable_init(&bt_LMS_sort, 1, LMS_num, sorted_substr_ids);
+  BucketTable bt_LMS_sort; // LMS-substringのsuffix array用のBucket Table
+  BucketTable_init(&bt_LMS_sort, 1, LMS_num, sorted_substr_ids);
   int* tmp; // 引数として渡す用に定義しておく
   construct_suffix_array(&bt_LMS_sort, sorted_substr_ids, LMS_num, 0, tmp);
 
@@ -163,21 +163,21 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   int* sorted_LMS_ids;
   sorted_LMS_ids = (int*)malloc(LMS_num * sizeof(int));
   cnt = 0;
-  for (int i = 0; i < bt_LMS_sort.backet_num; i++) {
-    if (bt_LMS_sort.backet_exists[i]) {
-      Backet* p_backet = &(bt_LMS_sort.backets[i]);
-      for (int j = 0; j < p_backet->f_idx; j++) {
-        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
+  for (int i = 0; i < bt_LMS_sort.bucket_num; i++) {
+    if (bt_LMS_sort.bucket_exists[i]) {
+      Bucket* p_bucket = &(bt_LMS_sort.buckets[i]);
+      for (int j = 0; j < p_bucket->f_idx; j++) {
+        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_bucket->data[j].first]];
       }
-      for (int j = p_backet->b_idx + 1; j < p_backet->size; j++) {
-        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_backet->data[j].first]];
+      for (int j = p_bucket->b_idx + 1; j < p_bucket->size; j++) {
+        sorted_LMS_ids[cnt++] = substr_idx_to_LMS_idx[sorted_substr_ids[p_bucket->data[j].first]];
       }
     }
   }
 
   // 取り出した順とは逆に各バケットの下から入れる
   for (int i = LMS_num - 1; i >= 0; i--)
-    BacketTable_b_insert(bt, sorted_LMS_ids[i], 1, sorted_LMS_ids[i]);
+    BucketTable_b_insert(bt, sorted_LMS_ids[i], 1, sorted_LMS_ids[i]);
 
   // (7) induced_sort()を実行
   induced_sort(bt, table, len);
@@ -188,8 +188,8 @@ void construct_suffix_array(BacketTable* bt, int* str, const int len, const int 
   free(LMS_ids);
   free(table);
 
-  BacketTable_destroy(&bt_LMS_substring);
-  BacketTable_destroy(&bt_LMS_sort);
+  BucketTable_destroy(&bt_LMS_substring);
+  BucketTable_destroy(&bt_LMS_sort);
 }
 
 void sais(const char str[], const char display) {
@@ -208,16 +208,16 @@ void sais(const char str[], const char display) {
   int_str[len - 1] = 0; // = (int)'\0'
   counts[0] = 1; // '\0'の出現回数は1
 
-  BacketTable bt_suffix_array; // suffix array(完成)用のBacket Table
-  BacketTable_init_with_counts(&bt_suffix_array, counts, 128, int_str);
+  BucketTable bt_suffix_array; // suffix array(完成)用のBucket Table
+  BucketTable_init_with_counts(&bt_suffix_array, counts, 128, int_str);
 
   construct_suffix_array(&bt_suffix_array, int_str, len, 1, counts);
 
   if (display == '1')
-    BacketTable_print_as_suffix_array(&bt_suffix_array, len - 1);
+    BucketTable_print_as_suffix_array(&bt_suffix_array, len - 1);
 
   free(int_str);
-  BacketTable_destroy(&bt_suffix_array);
+  BucketTable_destroy(&bt_suffix_array);
 
 }
 
