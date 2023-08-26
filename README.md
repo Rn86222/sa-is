@@ -1,6 +1,7 @@
 # sa-is
+Suffix Array (接尾辞配列) を Induced Sorting によって構築するアルゴリズム SA-IS (入力に対し線形時間) の実装。
 ## 動作確認方法
-`./submit`下で以下のコマンドを実行すれば動作確認ができる.
+`./submit`下で以下のコマンドを実行すれば動作確認ができる。
 ```sh
 gcc -O3 sais.c bucket.c
 ./a.out 1 < sample.txt
